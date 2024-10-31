@@ -1,0 +1,14 @@
+blinker
+cachelib
+click
+Flask
+Flask-Session
+itsdangerous
+Jinja2
+MarkupSafe
+msgspec
+pyaes
+pyasn1
+PyMySQL
+rsa
+Werkzeug
