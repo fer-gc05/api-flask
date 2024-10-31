@@ -95,6 +95,68 @@ def desassign_rfid(user_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+@app.route("/user/get_user_rfid", methods=["GET"])
+def get_user_rfid():
+    try:
+        result = UserController.get_user_rfid()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/user/set_rfid_mode", methods=["POST"])
+def set_rfid_mode():
+    mode = request.form.get("mode")
+
+    if not mode:
+        return jsonify({"error": "Modo RFID es obligatorio"}), 400
+
+    try:
+        result = UserController.set_rfid_mode(mode)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/user/get_rfid_mode", methods=["GET"])
+def get_rfid_mode():
+    try:
+        result = UserController.get_rfid_mode()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/user/save_rfid_temp", methods=["POST"])
+def save_rfid_temp():
+    rfid = request.form.get("rfid")
+    if not rfid:
+        return jsonify({"error": "El código RFID es obligatorio"}), 400
+
+    try:
+        result = UserController.save_rfid_temp(rfid)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/user/restart_rfid_temp", methods=["POST"])
+def restart_rfid_temp():
+    try:
+        result = UserController.restart_rfid_temp()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/user/get_rfid_temp", methods=["GET"])
+def get_rfid_temp():
+    try:
+        result = UserController.get_rfid_temp()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 @app.route("/user/create", methods=["POST"])
 def create_user():
     username = request.form.get("username")
