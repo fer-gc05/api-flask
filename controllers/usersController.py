@@ -1,8 +1,31 @@
 from models.usersModel import UserModel
 
-user_model = UserModel()
+import datetime
+import jwt
 
+user_model = UserModel()
+SECRET_KEY = 'tu_clave_secreta'
 class UserController:
+
+
+    @staticmethod
+    def login(username: str, password: str):
+        try:
+            if not username or not password:
+                raise Exception("El nombre de usuario y la contraseña son obligatorios.")
+
+            result = user_model.get_user_by_username_and_password(username, password)
+            if not result:
+                raise Exception("Usuario o contraseña incorrectos.")
+
+            token = jwt.encode({
+                'user_id': result['id'],
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
+            }, SECRET_KEY, algorithm='HS256')
+
+            return {"status": "success", "token": token}
+        except Exception as ex:
+            raise Exception(f"Error en login: {str(ex)}")
 
     @staticmethod
     def delete_user(user_id: int):

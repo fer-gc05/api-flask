@@ -14,12 +14,27 @@ class AlarmModel:
     def get_alarm_status(self, alarm_id: int) -> Dict[str, Any]:
         try:
             with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
-                sql = "SELECT status, activationPassword FROM devices WHERE id = %s"
+                sql = "SELECT status FROM devices WHERE id = %s"
                 cursor.execute(sql, (alarm_id,))
                 result = cursor.fetchone()
                 if result:
                     return {
-                        'status': 'Alarm activated' if result['status'] == 1 else 'Alarm deactivated',
+                        'status': 'Alarm activated' if result['status'] == 1 else 'Alarm deactivated'
+                    }
+                else:
+                    return {'error': 'No data found'}
+        except pymysql.MySQLError as e:
+            print(f"Database error: {e}")
+            return {'error': str(e)}
+
+    def password_activation(self) -> Dict[str, Any]:
+        try:
+            with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
+                sql = "SELECT activationPassword FROM devices WHERE id = 1"
+                cursor.execute(sql)
+                result = cursor.fetchone()
+                if result:
+                    return {
                         'activationPassword': result['activationPassword']
                     }
                 else:

@@ -58,30 +58,27 @@ class AutomationController:
             turn_on_hour = AutomationController.format_time(turn_on_hour)
             turn_off_hour = AutomationController.format_time(turn_off_hour)
 
-
             if status == 1:
                 if turn_on_hour <= current_time < turn_off_hour:
-
                     if current_device_status == 0:
-                        print("Automatización: Encendiendo el dispositivo.")
-                        return AutomationController.update_device_status(
+                        print("Automation: Alarm activated.")
+                        AutomationController.update_device_status(
                             current_device_status, 1, "Alarma activada por automatización"
                         )
-                    
+                        return {"Automation": "Alarm activated."}
+
                 elif current_time >= turn_off_hour:
                     if current_device_status == 1:
-                        print("Automatización: Apagando el dispositivo.")
+                        print("Automation: Alarm deactivated.")
                         automation_model.update_automation_status(0)
-                        return AutomationController.update_device_status(
+                        AutomationController.update_device_status(
                             current_device_status, 0, "Alarma desactivada por automatización"
                         )
+                        return {"Automation": "Alarm deactivated."}
 
-            return {"message": "Proceso de automatización completado"}
+            return {"Automation": "No changes on automation"}
         except Exception as ex:
             raise Exception(f"Error verificando la automatización: {str(ex)}")
-
-
-
 
     @staticmethod
     def format_time(value):
@@ -110,8 +107,6 @@ class AutomationController:
                 
                 if result:
                     automation_model.log_alarm_action(1, log_message)
-                    print(f"Registrando acción: {log_message}")
-                    return {"message": log_message}
                 else:
                     raise Exception("Error actualizando el estado del dispositivo")
             else:

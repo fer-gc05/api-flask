@@ -51,9 +51,9 @@ class AlarmController:
     def turn_on_alarm(password: str):
         try:
             result = alarm_model.get_alarm_status(1)
-
+            pas= alarm_model.password_activation()
             if result["status"] == "Alarm deactivated":
-                if password == result["activationPassword"]:
+                if password == pas["activationPassword"]:
                     alarm_model.update_alarm_status(1, 1)
                     alarm_model.insert_alarm_log(1, "Alarma activada por interfaz web")
                     return {"message": "Alarm activated"}
@@ -69,9 +69,10 @@ class AlarmController:
     def turn_off_alarm(password: str):
         try:
             result = alarm_model.get_alarm_status(1)
+            pas = alarm_model.password_activation()
 
             if result["status"] == "Alarm activated":
-                if password == result["activationPassword"]:
+                if password == pas["activationPassword"]:
                     alarm_model.update_alarm_status(1, 0)
                     alarm_model.insert_alarm_log(1, "Alarma desactivada por interfaz web")
                     AlarmController.deactivate_automation(1)

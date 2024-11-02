@@ -1,5 +1,8 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import os
+from pathlib import Path
+import json
 from models.usersModel import UserModel
 from controllers.alarmController import AlarmController
 from controllers.usersController import UserController
@@ -8,27 +11,57 @@ from controllers.logsController import LogsController
 from controllers.deviceController import DeviceController
 
 app = Flask(__name__)
+CORS(app)
 app.secret_key = os.urandom(24)
 
 user_model = UserModel()
+ALARM_STATUS_FILE = Path("alarm_status.json")
 
-@app.route("/")
+def save_alarm_status(alarm_status):
+    with open(ALARM_STATUS_FILE, "w") as file:
+        json.dump(alarm_status, file)
+
+def check_alarm_status(alarm_id=1):
+    try:
+        result = AlarmController.check_status(alarm_id)
+        save_alarm_status(result)
+    except Exception as e:
+        print(f"Error verificando el estado de la alarma: {str(e)}")
+
+@app.route("/", methods=["GET"])
 def index():
     return "Bienvenido a la API de la alarma"
 
-# Rutas de AlarmController
-@app.route("/alarm/status/<int:alarm_id>", methods=["GET"])
-def check_alarm_status(alarm_id):
+@app.route("/login", methods=["POST"])
+def login_route():
+    username = request.form.get("username")
+    password = request.form.get("password")
+
+    if not username or not password:
+        return jsonify({"error": "El nombre de usuario y la contraseña son obligatorios"}), 400
+
     try:
-        result = AlarmController.check_status(alarm_id)
+        result = UserController.login(username, password)
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+@app.route("/alarm/status", methods=["GET"])
+def get_alarm_status():
+    try:
+        if not os.path.exists(ALARM_STATUS_FILE):
+            return jsonify({"status": "Alarm status not available"}), 404
+        with open(ALARM_STATUS_FILE, "r") as file:
+            alarm_status = json.load(file)
+
+        return jsonify(alarm_status)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/alarm/toggle/<string:rfid>", methods=["POST"])
 def toggle_alarm(rfid):
     try:
         result = AlarmController.toggle_alarm(rfid)
+        check_alarm_status()
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -40,6 +73,7 @@ def turn_on_alarm():
         return jsonify({"error": "Password is required"}), 400
     try:
         result = AlarmController.turn_on_alarm(password)
+        check_alarm_status()
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -51,10 +85,10 @@ def turn_off_alarm():
         return jsonify({"error": "Password is required"}), 400
     try:
         result = AlarmController.turn_off_alarm(password)
+        check_alarm_status()
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
 @app.route("/alarm/intruder_detected", methods=["POST"])
 def intruder_detected():
     try:
@@ -122,7 +156,7 @@ def set_rfid_mode():
 def get_rfid_mode():
     try:
         result = UserController.get_rfid_mode()
-        return jsonify(result)
+        return jsonify({"mode": result})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -172,6 +206,26 @@ def create_user():
         return jsonify({"error": str(e)}), 400
 
 # Rutas de AutomationController
+@app.route("/automation/status", methods=["GET"])
+def get_automation_status():
+    try:
+        result = AutomationController.get_automation_status()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/automation/check", methods=["GET"])
+def check_automation():
+    try:
+        result = AutomationController.check_automation()
+        if result["Automation"] in ["Alarm activated.", "Alarm deactivated."]:
+            check_alarm_status()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
 @app.route("/automation/activate", methods=["POST"])
 def activate_automation():
     try:
